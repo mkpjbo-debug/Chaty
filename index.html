@@ -2,6 +2,12 @@
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Chaty</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#12002b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <style>
 :root{--a:#b44cff;--b:#ff3df2;--bg:linear-gradient(160deg,#12002b,#3a0a6e 55%,#1a0840);--t:#fff;--m:rgba(255,255,255,.62);--g:rgba(255,255,255,.09);--gb:rgba(255,255,255,.14);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -114,7 +120,9 @@ async function auth(sign){const n=$('#un').value.trim(),p=$('#pw').value,e=$('#e
  catch(x){const c=x.code||'';e.textContent=c.includes('already')?t('ex'):c.includes('weak')?t('short'):/credential|password|user-not-found/.test(c)?t('bad'):c||String(x)}}
 $('#li').onclick=()=>auth(false);$('#su').onclick=()=>auth(true);
 $('#lo').onclick=async()=>{await signOut(au);location.reload()};
-function notify(m){if(document.hidden&&window.Notification&&Notification.permission=='granted')try{new Notification((users[m.from]||{}).name||'Chaty',{body:m.text||'🎴'})}catch(e){}}
+let swr=null;try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(r=>swr=r).catch(()=>{})}catch(e){}
+document.addEventListener('click',()=>{try{if(window.Notification&&Notification.permission=='default')Notification.requestPermission()}catch(e){}},{once:true});
+function notify(m){if(!document.hidden||!window.Notification||Notification.permission!='granted')return;const n=(users[m.from]||{}).name||'Chaty',o={body:m.text||'🎴',icon:'icon-192.png',tag:m.from};try{swr?swr.showNotification(n,o):new Notification(n,o)}catch(e){}}
 function enter(uid){me=uid;$('#auth').classList.add('hide');$('#app').classList.remove('hide');
  unsub.push(db.collection('users').onSnapshot(s=>{users={};s.docs.forEach(d=>users[d.id]=d.data());if(users[me]){$('#mename').textContent=users[me].name;$('#meav').textContent=ini(users[me].name)}renderList();status()}));
  unsub.push(db.collection('msgs').where('members','array-contains',me).onSnapshot(s=>{const p=new Set(all.map(m=>m.id));all=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>a.ts-b.ts);if(loaded)all.filter(m=>!p.has(m.id)&&m.from!=me).forEach(notify);loaded=true;renderList();renderMsgs()}));
